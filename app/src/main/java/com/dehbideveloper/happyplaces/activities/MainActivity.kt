@@ -1,4 +1,4 @@
-package com.dehbideveloper.happyplaces
+package com.dehbideveloper.happyplaces.activities
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
