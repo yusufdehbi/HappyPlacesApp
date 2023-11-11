@@ -18,7 +18,9 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.dehbideveloper.happyplaces.R
+import com.dehbideveloper.happyplaces.database.DatabaseHandler
 import com.dehbideveloper.happyplaces.databinding.ActivityAddHappyPlaceBinding
+import com.dehbideveloper.happyplaces.models.HappyPlaceModel
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.MultiplePermissionsReport
 import com.karumi.dexter.PermissionToken
@@ -39,8 +41,8 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
     private var cal = Calendar.getInstance()
     private lateinit var dateSetListener: DatePickerDialog.OnDateSetListener
     private var saveImageToInternalStorage : Uri? = null
-    private var latitude: Double = 0.0
-    private var longitude: Double = 0.0
+    private var mLatitude: Double = 0.0
+    private var mLongitude: Double = 0.0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,7 +60,9 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
             cal.set(Calendar.YEAR, year)
             cal.set(Calendar.MONTH, month)
             cal.set(Calendar.DAY_OF_MONTH, dayOfMonth)
+            updateDateInView()
         }
+        updateDateInView()
         binding?.etDate?.setOnClickListener(this)
         binding?.tvAddImage?.setOnClickListener(this)
         binding?.btnSave?.setOnClickListener(this)
@@ -75,7 +79,6 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
                     dateSetListener, cal.get(Calendar.YEAR),
                     cal.get(Calendar.MONTH),
                     cal.get(Calendar.DAY_OF_MONTH)).show()
-                updateDateInView()
             }
 
             // Handle click on the add image TextView
@@ -95,9 +98,42 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
                 }
                 pictureDialog.show()
             }
-
+            // Handle saving happy place data into database
             R.id.btn_save -> {
-                // TODO save the data model to the database
+                when {
+                    binding?.etTitle?.text!!.isBlank() -> {
+                        Toast.makeText(this@AddHappyPlaceActivity, "Please enter title", Toast.LENGTH_SHORT).show()
+                    }
+                    binding?.etDescription?.text!!.isBlank() -> {
+                        Toast.makeText(this@AddHappyPlaceActivity, "Please enter description", Toast.LENGTH_SHORT).show()
+                    }
+                    binding?.etLocation?.text!!.isBlank() -> {
+                        Toast.makeText(this@AddHappyPlaceActivity, "Please enter a location", Toast.LENGTH_SHORT).show()
+                    }
+                    saveImageToInternalStorage == null -> {
+                        Toast.makeText(this@AddHappyPlaceActivity, "Please enter an image", Toast.LENGTH_SHORT).show()
+                    }
+                    else -> {
+                        val happyPlaceModel = HappyPlaceModel(
+                            0,
+                            binding?.etTitle?.text!!.toString(),
+                            saveImageToInternalStorage.toString(),
+                            binding?.etDescription?.text!!.toString(),
+                            binding?.etDate?.text!!.toString(),
+                            binding?.etLocation?.text!!.toString(),
+                            mLatitude,
+                            mLongitude
+                        )
+
+                        val dbHandler = DatabaseHandler(this)
+                        val addHappyPlaceResult = dbHandler.addHappyPlace(happyPlaceModel)
+
+                        if (addHappyPlaceResult > 0){
+                            Toast.makeText(applicationContext, "The happy place details are inserted successfully", Toast.LENGTH_SHORT).show()
+                            finish()
+                        }
+                    }
+                }
             }
         }
     }
