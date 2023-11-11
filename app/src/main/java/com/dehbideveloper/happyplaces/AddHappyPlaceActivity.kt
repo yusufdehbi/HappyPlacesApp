@@ -6,6 +6,7 @@ import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
@@ -77,8 +78,8 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
                     when(which){
                         // Trigger the method to choose a photo from the Gallery
                         0 -> choosePhotoFromGallery()
-                        // Display a message indicating that camera capture is not yet implemented
-                        1 -> Toast.makeText(this@AddHappyPlaceActivity, "Selecting photo from camera coming soon...", Toast.LENGTH_SHORT).show()
+                        // Trigger the method to take a photo from the Camera
+                        1 -> takePhotoFromCamera()
                     }
                 }
                 pictureDialog.show()
@@ -90,23 +91,56 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode == Activity.RESULT_OK){
             if (requestCode == GALLERY) {
-                if (data != null){
+                if (data != null) {
                     val contentURI = data.data
                     try {
-                        val selectedImageBitmap = MediaStore.Images.Media.getBitmap(this.contentResolver, contentURI)
+                        val selectedImageBitmap =
+                            MediaStore.Images.Media.getBitmap(this.contentResolver, contentURI)
                         binding?.ivPlaceImage?.setImageBitmap(selectedImageBitmap)
-                    } catch (e: IOException){
+                    } catch (e: IOException) {
                         e.printStackTrace()
-                        Toast.makeText(this@AddHappyPlaceActivity, "Failed to load image form gallery", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@AddHappyPlaceActivity,
+                            "Failed to load image form gallery",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
+            }
+            else if (requestCode == CAMERA){
+                val thumbnail: Bitmap = data?.extras?.get("data") as Bitmap
+                binding?.ivPlaceImage?.setImageBitmap(thumbnail)
             }
         }
     }
 
 
-    private fun choosePhotoFromGallery(){
+    private fun takePhotoFromCamera(){
         // Use the Dexter library to request runtime permissions for reading and writing external storage and camera.
+        Dexter.withActivity(this).withPermissions(
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.CAMERA
+        ).withListener(object: MultiplePermissionsListener {
+            override fun onPermissionsChecked(report: MultiplePermissionsReport?) {
+                if (report!!.areAllPermissionsGranted()){
+                    // All required permissions are granted, show a toast message.
+                    val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+                    startActivityForResult(cameraIntent, CAMERA)
+                }
+            }
+            override fun onPermissionRationaleShouldBeShown(
+                permissions: MutableList<PermissionRequest>?,
+                permissionToken: PermissionToken?
+            ) {
+                // Display a rationale dialog to explain the need for permissions.
+                showRationalDialogForPermissions()
+            }
+        }).onSameThread().check()
+    }
+
+    private fun choosePhotoFromGallery(){
+        // Use the Dexter library to request runtime permissions for reading and writing external storage.
         Dexter.withActivity(this).withPermissions(
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
@@ -165,5 +199,6 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
 
     companion object {
         private const val GALLERY = 1
+        private const val CAMERA  = 2
     }
 }
