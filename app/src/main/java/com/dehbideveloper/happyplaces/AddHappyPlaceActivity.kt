@@ -8,6 +8,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -92,7 +93,7 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
             override fun onPermissionsChecked(report: MultiplePermissionsReport?) {
                 if (report!!.areAllPermissionsGranted()){
                     // All required permissions are granted, show a toast message.
-                    Toast.makeText(this@AddHappyPlaceActivity,
+                    Toast.makeText(applicationContext,
                         "Storage READ/WRITE are granted. Now you can select an image from Gallery", Toast.LENGTH_SHORT).show()
                 }
             }
