@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
+import android.view.View.OnClickListener
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
@@ -14,7 +15,9 @@ import de.hdodenhof.circleimageview.CircleImageView
 open class HappyPlacesAdapter(
     private val context: Context,
     private var list: ArrayList<HappyPlaceModel>
-) : RecyclerView.Adapter<RecyclerView.ViewHolder>(){
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+
+    private var onClickListener: OnClickListener? = null
 
     /**
      * Inflates the item views which is designed in xml layout file
@@ -40,6 +43,13 @@ open class HappyPlacesAdapter(
     }
 
     /**
+     * A function to bind the onclickListener.
+     */
+    fun setOnClickListener(onClickListener: OnClickListener){
+        this.onClickListener = onClickListener
+    }
+
+    /**
      * Binds each item in the ArrayList to a view
      *
      * Called when the recyclerview needs a new {@link ViewHolder} of the given to represent
@@ -57,6 +67,12 @@ open class HappyPlacesAdapter(
             holder.itemView.findViewById<CircleImageView>(R.id.iv_place_image).setImageURI(Uri.parse(model.image))
             holder.itemView.findViewById<TextView>(R.id.tvTitle).text = model.title
             holder.itemView.findViewById<TextView>(R.id.tvDescription).text = model.description
+
+            holder.itemView.setOnClickListener{
+                if (onClickListener != null){
+                    onClickListener!!.onClick(position, model)
+                }
+            }
         }
     }
 
@@ -64,5 +80,9 @@ open class HappyPlacesAdapter(
      * A ViewHolder describes on item view and metadata about its place within ...
      * */
     private class MyViewHolder(view: View): RecyclerView.ViewHolder(view)
+
+    interface OnClickListener {
+        fun onClick(position: Int, model: HappyPlaceModel)
+    }
 
 }
