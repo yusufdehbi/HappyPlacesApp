@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.dehbideveloper.happyplaces.R
 import com.dehbideveloper.happyplaces.activities.AddHappyPlaceActivity
 import com.dehbideveloper.happyplaces.activities.MainActivity
+import com.dehbideveloper.happyplaces.database.DatabaseHandler
 import com.dehbideveloper.happyplaces.models.HappyPlaceModel
 import de.hdodenhof.circleimageview.CircleImageView
 
@@ -80,11 +81,28 @@ open class HappyPlacesAdapter(
         }
     }
 
+    /**
+     * A function to edit the added happy place detail and pass the existing details through intent.
+     */
     fun notifyEditItem(activity: Activity, position: Int, requestCode: Int){
         val intent = Intent(context, AddHappyPlaceActivity::class.java)
         intent.putExtra(MainActivity.EXTRA_PLACE_DETAILS, list[position])
         activity.startActivityForResult(intent, requestCode)
         notifyItemChanged(position)
+    }
+
+    /**
+     * A function to delete the added happy place detail from the local storage.
+     */
+    fun removeAt(position: Int) {
+
+        val dbHandler = DatabaseHandler(context)
+        val isDeleted = dbHandler.deleteHappyPlace(list[position])
+
+        if (isDeleted > 0) {
+            list.removeAt(position)
+            notifyItemRemoved(position)
+        }
     }
 
     /**
